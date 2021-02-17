@@ -11,11 +11,11 @@ import math
 # Setting random seeds to keep everything deterministic.
 random.seed(1618)
 np.random.seed(1618)
-#tf.set_random_seed(1618)   # Uncomment for TF1.
+# tf.set_random_seed(1618)   # Uncomment for TF1.
 tf.random.set_seed(1618)
 
 # Disable some troublesome logging.
-#tf.logging.set_verbosity(tf.logging.ERROR)   # Uncomment for TF1.
+tf.logging.set_verbosity(tf.logging.ERROR)   # Uncomment for TF1.
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Information on dataset.
@@ -24,8 +24,8 @@ IMAGE_SIZE = 784
 
 # Use these to set the algorithm to use.
 # ALGORITHM = "guesser"
-ALGORITHM = "custom_net"
-#ALGORITHM = "tf_net"
+# ALGORITHM = "custom_net"
+ALGORITHM = "tf_net"
 
 
 
@@ -150,7 +150,7 @@ def preprocessData(raw):
     print("New shape of yTest dataset: %s." % str(yTestP.shape))
     return ((xTrain, yTrainP), (xTest, yTestP))
 
-
+# https://www.tensorflow.org/tutorials/keras/classification
 
 def trainModel(data):
     xTrain, yTrain = data
@@ -165,7 +165,14 @@ def trainModel(data):
     elif ALGORITHM == "tf_net":
         print("Building and training TF_NN.")
         print("Not yet implemented.")                   #TODO: Write code to build and train your keras neural net.
-        return None
+        model = keras.Sequential([
+            keras.layers.Dense(512, activation='sigmoid'),
+            keras.layers.Dense(10)
+        ])
+        model.compile(optimizer='adam', 
+                      loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                      metrics=['accuracy'])
+        return model.fit(xTrain, yTrain, epochs=10)
     else:
         raise ValueError("Algorithm not recognized.")
 
@@ -190,7 +197,7 @@ def runModel(data, model):
     elif ALGORITHM == "tf_net":
         print("Testing TF_NN.")
         print("Not yet implemented.")                   #TODO: Write code to run your keras neural net.
-        return None
+        return normalize(model.predict(data))
     else:
         raise ValueError("Algorithm not recognized.")
 
