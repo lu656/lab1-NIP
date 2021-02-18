@@ -15,7 +15,7 @@ np.random.seed(1618)
 tf.random.set_seed(1618)
 
 # Disable some troublesome logging.
-tf.logging.set_verbosity(tf.logging.ERROR)   # Uncomment for TF1.
+# tf.logging.set_verbosity(tf.logging.ERROR)   # Uncomment for TF1.
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # Information on dataset.
@@ -85,8 +85,8 @@ class NeuralNetwork_2Layer():
                 # w_grad = [grad + change_grad for grad, change_grad in zip(w_grad, change_w_grad)]
                 # self.W1 = self.W1 - (self.lr / mbs) * w_grad[0]
                 # self.W2 = self.W2 - (self.lr / mbs) * w_grad[1]
-                self.W1 = self.W1 - (self.lr / mbs) * np.dot(x_cur.transpose(), l1d)
-                self.W2 = self.W2 - (self.lr / mbs) * np.dot(l1.transpose(), l2d)
+                self.W1 = self.W1 - ((self.lr / mbs) * np.dot(x_cur.transpose(), l1d))
+                self.W2 = self.W2 - ((self.lr / mbs) * np.dot(l1.transpose(), l2d))
 
         pass          #TODO: Implement backprop. allow minibatches. mbs should specify the size of each minibatch.
 
@@ -170,20 +170,27 @@ def trainModel(data):
             keras.layers.Dense(10)
         ])
         model.compile(optimizer='adam', 
-                      loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                    #   loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                      loss='mean_squared_error',
                       metrics=['accuracy'])
-        return model.fit(xTrain, yTrain, epochs=10)
+        model.fit(xTrain, yTrain, epochs=10)
+        return model
     else:
         raise ValueError("Algorithm not recognized.")
 
 
 def normalize(data):
     for i in range(len(data)): 
+        temp = np.argmax(data[i])
         for j in range(len(data[i])):
-            if data[i][j] == max(data[i]):
+            if j == temp:
                 data[i][j] = 1
             else:
                 data[i][j] = 0
+            # if data[i][j] == max(data[i]):
+            #     data[i][j] = 1
+            # else:
+            #     data[i][j] = 0
     return data
 
 def runModel(data, model):
@@ -206,16 +213,57 @@ def runModel(data, model):
 def evalResults(data, preds):   #TODO: Add F1 score confusion matrix here.
     # from sklearn.metrics import confusion_matrix
     xTest, yTest = data
-    yTest = normalize(yTest)
+    # yTest = normalize(yTest)
     acc = 0
+    conf = {}
+    fp = {}
+    fn = {}
+    for i in range(0, 10):
+        conf[str(i)] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        fp[str(i)] = 0
+        fn[str(i)] = 0
     for i in range(preds.shape[0]):
         # if np.argmax(yTest[i]) == np.argmax(preds[i]): acc += 1
-        # print('shape preds: {} preds: {} ytest: {}'.format(preds.shape, preds[i], yTest[i]))
+        conf[str(np.argmax(yTest[i]))][np.argmax(preds[i])] += 1
+        # print('{} ytest: {} preds: {}'.format(conf[str(np.argmax(yTest[i]))], np.argmax(yTest[i]), np.argmax(preds[i])))
         if np.array_equal(preds[i], yTest[i]):   acc = acc + 1
     accuracy = acc / preds.shape[0]
     print("Classifier algorithm: %s" % ALGORITHM)
     print("Classifier accuracy: %f%%" % (accuracy * 100))
     print()
+    print('o\\p{:5d} {:5d} {:5d} {:5d} {:5d} {:5d} {:5d} {:5d} {:5d} {:5d}'.format(0, 1, 2, 3, 4, 5, 6, 7, 8, 9))
+    for i in range(0, 10):
+        temp = conf[str(i)]
+        # true positives + false negatives
+        fn[str(i)] = sum(temp)
+
+        # get true positives + false positives
+        t2 = []
+        for j in range(0, 10):
+            t2.append(conf[str(j)][i])
+        fp[str(i)] = sum(t2)
+        print('{}: {:5d} {:5d} {:5d} {:5d} {:5d} {:5d} {:5d} {:5d} {:5d} {:5d}'.format(i, temp[0], temp[1], temp[2], temp[3], temp[4], temp[5], temp[6], temp[7], temp[8], temp[9]))
+    
+    print()
+    print('    precision\t\trecall\t\tf1 score')
+    for i in range(0, 10):
+        try:
+            prec = conf[str(i)][i] / fp[str(i)]
+        except:
+            prec = 0
+
+        try:
+            rec = conf[str(i)][i] / fn[str(i)]
+        except:
+            rec = 0
+
+        try:
+            f1 = (2 * prec * rec)/(prec + rec)
+        except:
+            f1 = 0
+        print('{}:\t{:01.3f}\t\t {:2.3f}\t\t   {:3.3f}'.format(i, prec, rec, f1))
+
+
     # print(confusion_matrix(yTest, preds))
 
 
