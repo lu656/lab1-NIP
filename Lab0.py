@@ -47,7 +47,6 @@ class NeuralNetwork_2Layer():
 
     # Activation prime function.
     def __sigmoidDerivative(self, x):
-        # sig = self.__sigmoid(x)
         return x * (1 - x)
         pass   #TODO: implement
 
@@ -65,7 +64,6 @@ class NeuralNetwork_2Layer():
                 x_batch = self.__batchGenerator(xVals, mbs)
                 y_batch = self.__batchGenerator(yVals, mbs)
             
-            # w_grad = [np.zeros(self.W1.shape), np.zeros(self.W2.shape)]
             for x_cur, y_cur in zip(x_batch, y_batch):
                 # forward pass
                 l1, l2 = self.__forward(x_cur)
@@ -77,14 +75,6 @@ class NeuralNetwork_2Layer():
                 l1e = np.dot(l2d , self.W2.transpose())
                 l1d = l1e * sig_prime[0]
                 
-                # delta = activation_cost * sig_prime[1]
-                # output_layer = np.dot(delta.transpose() , l1).transpose()
-                # delta = np.dot(self.W2, delta.transpose()).transpose() * sig_prime[0]
-                # hidden_layer = np.dot(delta.transpose() , x_cur).transpose()
-                # change_w_grad = [hidden_layer, output_layer]
-                # w_grad = [grad + change_grad for grad, change_grad in zip(w_grad, change_w_grad)]
-                # self.W1 = self.W1 - (self.lr / mbs) * w_grad[0]
-                # self.W2 = self.W2 - (self.lr / mbs) * w_grad[1]
                 self.W1 = self.W1 - ((self.lr / mbs) * np.dot(x_cur.transpose(), l1d))
                 self.W2 = self.W2 - ((self.lr / mbs) * np.dot(l1.transpose(), l2d))
 
@@ -98,10 +88,6 @@ class NeuralNetwork_2Layer():
 
     # Predict.
     def predict(self, xVals):
-        # temp = []
-        # for i in xVals:
-        #     temp.append(np.ndarray.flatten(i))
-        # xVals = np.stack(temp)
         _, layer2 = self.__forward(xVals)
         return layer2
 
@@ -170,7 +156,6 @@ def trainModel(data):
             keras.layers.Dense(10)
         ])
         model.compile(optimizer='adam', 
-                    #   loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       loss='mean_squared_error',
                       metrics=['accuracy'])
         model.fit(xTrain, yTrain, epochs=10)
@@ -187,10 +172,6 @@ def normalize(data):
                 data[i][j] = 1
             else:
                 data[i][j] = 0
-            # if data[i][j] == max(data[i]):
-            #     data[i][j] = 1
-            # else:
-            #     data[i][j] = 0
     return data
 
 def runModel(data, model):
@@ -199,7 +180,6 @@ def runModel(data, model):
     elif ALGORITHM == "custom_net":
         print("Testing Custom_NN.")
         print("Not yet implemented.")                   #TODO: Write code to run your custon neural net.
-        # return model.predict(data)
         return normalize(model.predict(data))
     elif ALGORITHM == "tf_net":
         print("Testing TF_NN.")
@@ -211,9 +191,7 @@ def runModel(data, model):
 
 
 def evalResults(data, preds):   #TODO: Add F1 score confusion matrix here.
-    # from sklearn.metrics import confusion_matrix
     xTest, yTest = data
-    # yTest = normalize(yTest)
     acc = 0
     conf = {}
     fp = {}
@@ -223,9 +201,7 @@ def evalResults(data, preds):   #TODO: Add F1 score confusion matrix here.
         fp[str(i)] = 0
         fn[str(i)] = 0
     for i in range(preds.shape[0]):
-        # if np.argmax(yTest[i]) == np.argmax(preds[i]): acc += 1
         conf[str(np.argmax(yTest[i]))][np.argmax(preds[i])] += 1
-        # print('{} ytest: {} preds: {}'.format(conf[str(np.argmax(yTest[i]))], np.argmax(yTest[i]), np.argmax(preds[i])))
         if np.array_equal(preds[i], yTest[i]):   acc = acc + 1
     accuracy = acc / preds.shape[0]
     print("Classifier algorithm: %s" % ALGORITHM)
@@ -262,9 +238,6 @@ def evalResults(data, preds):   #TODO: Add F1 score confusion matrix here.
         except:
             f1 = 0
         print('{}:\t{:01.3f}\t\t {:2.3f}\t\t   {:3.3f}'.format(i, prec, rec, f1))
-
-
-    # print(confusion_matrix(yTest, preds))
 
 
 
